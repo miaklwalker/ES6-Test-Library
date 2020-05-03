@@ -22,6 +22,7 @@ const Mock = {
                     this.mock.results.push({value:product});
                     return product;
                 }else{
+                    this.mock.calls.push([...args]);
                     return this.mock.nextValue.pop();
                 }
             }
@@ -29,9 +30,10 @@ const Mock = {
         this.func = spy;
         return spy;
     },
-    returnOnceWith(value){
+    mockReturnValueOnce(value){
         if(this.func !== undefined) {
             this.func[MOCK].nextValue.push(value);
+            return this;
         }
     }
 };

@@ -22,6 +22,16 @@ function expect (received){
     return new Expect(received);
 }
 
+expect = new Proxy(expect,{
+    apply(target,thisArg,args){
+        return target.apply(thisArg,args);
+    },
+    get(target,prop){
+       return Expect[prop];
+    }
+});
+
+
 class Expect {
     constructor(received) {
         this.received = received;
@@ -100,9 +110,12 @@ class Expect {
     toHavePropertyWithValue(expected, value) {
         return (this.toHaveProperty(expected) && mapObjToString(this.received)[expected] === value) ?this.pass() : this.fail();
     };
-    toBeFalsey(){
+    toBeFalsy(){
         return this.received ? this.fail() : this.pass();
     };
+    toBeDefined(expected){
+        return this.toBeUndefined() !== true ? this.pass() : this.fail();
+    }
     toBeGreaterThan(expected){
         return (this.received > expected) ? this.pass() : this.fail();
     };
@@ -184,6 +197,18 @@ class Expect {
     }
     toThrow(){
 
+    }
+    toBeCloseTo(expected,numDigits){
+        const precise = ( x ) => Number.parseFloat(x).toPrecision(numDigits);
+        return precise(this.received) === precise(expected) ? this.pass(expected):this.fail(expected);
+    }
+    static extend(matcher){
+        for(let key in matcher){
+           if(!Object.keys(this).includes(key)){
+               this[key] = matcher[key];
+               console.log(this);
+           }
+        }
     }
 }
 
