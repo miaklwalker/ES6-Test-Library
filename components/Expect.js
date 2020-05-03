@@ -75,8 +75,18 @@ class Expect {
     anything(){
         return this.received !== undefined && this.received !== null ? this.pass() : this.fail('To Not be null or undefined');
     };
-    arrayContaining(){};
-    any(expected){};
+    arrayContaining(expected){
+        if(Array.isArray(expected)){
+            return expected.map(member=>{
+                return this.received.includes(member)
+            }).includes(false) ? this.fail() : this.pass();
+        }else{
+            return this.received.includes(expected) ? this.fail() : this.pass();
+        }
+    };
+    any(expected){
+        return typeof this.received === typeof expected() ? this.pass() : this.fail();
+    };
     get not(){
         this._not = true;
         return this
@@ -148,15 +158,33 @@ class Expect {
     toHaveBeenNthCalledWith(nth,args){
         return expect(this.received.mock.calls[nth]).toMatchArray(args) ? this.pass() : this.fail();
     }
-    toHaveReturnedTimes(){}
-    toHaveLastReturned(){}
-    toHaveNthReturnWith(){}
-    toContain(){}
-    toContainEqual(){}
-    tomatch(){}
-    toMatchObject(){}
-    toStrictlyEqual(){}
-    toThrow(){}
+    toHaveReturnedTimes(expected){
+        return this.received.mock.results.length === expected ? this.pass(expected) : this.fail(expected);
+    }
+    toHaveLastReturned(){
+        return this.received.mock.results.length > 0 ? this.pass() : this.fail();
+    }
+    toHaveNthReturnWith(){
+        return expect(this.received.mock.calls[this.received.mock.calls.length-1]).toMatchArray(args);
+    }
+    toContain(){
+
+    }
+    toContainEqual(){
+
+    }
+    tomatch(){
+
+    }
+    toMatchObject(){
+
+    }
+    toStrictlyEqual(){
+
+    }
+    toThrow(){
+
+    }
 }
 
 
