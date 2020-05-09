@@ -32,3 +32,27 @@ console.log(expect(null).toBeNull());
 console.log(expect('Could Be True').toBeTruthy());
 console.log(expect(undefined).toBeUndefined());
 console.log(expect(NaN).toBeNaN ());
+
+expect.extend({
+    toBeWithinRange(floor, ceiling) {
+        console.log(this.received,floor,ceiling);
+      const pass = this.received >= floor && this.received <= ceiling;
+      if (pass) {
+        return {
+          message: () =>
+            `expected ${this.received} not to be within range ${floor} - ${ceiling}`,
+          pass: true,
+        };
+      } else {
+        return {
+          message: () =>
+            `expected ${this.received} to be within range ${floor} - ${ceiling}`,
+          pass: false,
+        };
+      }
+    },
+  });
+
+
+  console.log(expect(100).toBeWithinRange(90, 110));
+  console.log(expect(101).not.toBeWithinRange(0, 100));

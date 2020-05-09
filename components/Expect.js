@@ -26,6 +26,10 @@ expect = new Proxy(expect,{
         return target.apply(thisArg,args);
     },
     get(target,prop){
+        if(prop === 'extend'){
+            console.log('ran');
+            return Expect.extend
+        }
        return Expect[prop];
     }
 });
@@ -53,18 +57,18 @@ class Expect {
                         return this.fail(expected);
                     }
                 }
-                return this.pass()
+                return this.pass(expected)
             }
         }else{
             return Object.is(this.received,expected);
         }
     };
     toBe(expected){
-        return  Object.is(expected, this.received) ? this.pass() : this.fail(expected);
+        return  Object.is(expected, this.received) ? this.pass(expected) : this.fail(expected);
     };
     toHaveReturned(expected){
         if(expect(this.received()).toBe(expected)){
-            return this.pass();
+            return this.pass(expected);
         }
         return this.fail(expected);
     };
@@ -72,7 +76,7 @@ class Expect {
         if (this.received.length === expected.length) {
             let temp = this.received.map((member, index) => member === expected[index]);
             if (!temp.includes(false)) {
-                return this.pass();
+                return this.pass(expected);
             } else {
                 return this.fail(expected);
             }
@@ -81,7 +85,7 @@ class Expect {
         return false;
     };
     anything(){
-        return this.received !== undefined && this.received !== null ? this.pass() : this.fail('To Not be null or undefined');
+        return this.received !== undefined && this.received !== null ? this.pass('to Be Null') : this.fail('To Not be null or undefined');
     };
     arrayContaining(expected){
         if(Array.isArray(expected)){
@@ -89,54 +93,54 @@ class Expect {
                 return this.received.includes(member)
             }).includes(false) ? this.fail() : this.pass();
         }else{
-            return this.received.includes(expected) ? this.fail() : this.pass();
+            return this.received.includes(expected) ? this.fail(expected) : this.pass(expected);
         }
     };
     any(expected){
-        return typeof this.received === typeof expected() ? this.pass() : this.fail();
+        return typeof this.received === typeof expected() ? this.pass(expected) : this.fail(expected);
     };
     get not(){
         this._not = true;
         return this
     };
     toHaveLength(expected){
-        return this.received.length === expected ? this.pass(): this.fail(`To have length ${expected}`);
+        return this.received.length === expected ? this.pass(expected): this.fail(`To have length ${expected}`);
     }
     toHaveProperty(expected){
-        return Object.keys(mapObjToString(this.received)).includes(expected) ? this.pass() : this.fail(expected);
+        return Object.keys(mapObjToString(this.received)).includes(expected) ? this.pass(expected) : this.fail(expected);
     };
     toHavePropertyWithValue(expected, value) {
-        return (this.toHaveProperty(expected) && mapObjToString(this.received)[expected] === value) ?this.pass() : this.fail();
+        return (this.toHaveProperty(expected) && mapObjToString(this.received)[expected] === value) ?this.pass(expected) : this.fail(expected);
     };
     toBeFalsy(){
-        return this.received ? this.fail() : this.pass();
+        return this.received ? this.fail('Expected a falsey value') : this.pass(' ');
     };
     toBeDefined(expected){
-        return this.toBeUndefined() !== true ? this.pass() : this.fail();
+        return this.toBeUndefined() !== true ? this.pass(expected) : this.fail(expected);
     }
     toBeGreaterThan(expected){
-        return (this.received > expected) ? this.pass() : this.fail();
+        return (this.received > expected) ? this.pass(expected) : this.fail(expected);
     };
     toBeGreaterThanOrEqual(expected){
-        return (this.received >= expected)? this.pass() : this.fail();
+        return (this.received >= expected)? this.pass(expected) : this.fail(expected);
     };
     toBeLessThan(expected){
-        return (this.received < expected)? this.pass() : this.fail();
+        return (this.received < expected)? this.pass(expected) : this.fail(expected);
     };
     toBeLessThanOrEqual(expected){
-        return (this.received <= expected)? this.pass() : this.fail();
+        return (this.received <= expected)? this.pass(expected) : this.fail(expected);
     };
     toBeInstanceOf(expected){
         return (this.received instanceof expected)? this.pass(expected) : this.fail(expected);
     };
     toBeNull() {
-        return (this.received == null)? this.pass() : this.fail();
+        return (this.received == null)? this.pass(expected) : this.fail(expected);
     };
     toBeTruthy() {
-        return !(!this.received)? this.pass() : this.fail();
+        return !(!this.received)? this.pass(expected) : this.fail(expected);
     };
     toBeUndefined() {
-        return (this.received == undefined)? this.pass() : this.fail();
+        return (this.received == undefined)? this.pass('expected to not be undefined') : this.fail('expected undefined');
     };
     toBeNaN () {
         if (
@@ -148,9 +152,9 @@ class Expect {
             && this.received !== 0
             && this.received !== false
         ) {
-            return this.pass()
+            return this.pass('Expected to not be NaN')
         }
-        return this.fail();
+        return this.fail('Expected to be NaN');
     };
     toHaveBeenCalled(){
         return this.received.mock.calls.length > 0 ? this.pass() : this.fail() ;
@@ -200,12 +204,11 @@ class Expect {
         const precise = ( x ) => Number.parseFloat(x).toPrecision(numDigits);
         return precise(this.received) === precise(expected) ? this.pass(expected):this.fail(expected);
     }
-    static extend(matcher){
+    static extend = (matcher)=>{
         for(let key in matcher){
-           if(!Object.keys(this).includes(key)){
-               this[key] = matcher[key];
-           }
+            Expect.prototype[key] = matcher[key];
         }
+
     }
 }
 
