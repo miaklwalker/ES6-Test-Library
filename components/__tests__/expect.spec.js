@@ -1,5 +1,5 @@
 import expect from "../Expect.js";
-
+import Mock from '../Mock.js';
 function add (a, b) {
     return a + b ;
 }
@@ -33,26 +33,15 @@ console.log(expect('Could Be True').toBeTruthy());
 console.log(expect(undefined).toBeUndefined());
 console.log(expect(NaN).toBeNaN ());
 
-expect.extend({
-    toBeWithinRange(floor, ceiling) {
-        console.log(this.received,floor,ceiling);
-      const pass = this.received >= floor && this.received <= ceiling;
-      if (pass) {
-        return {
-          message: () =>
-            `expected ${this.received} not to be within range ${floor} - ${ceiling}`,
-          pass: true,
-        };
-      } else {
-        return {
-          message: () =>
-            `expected ${this.received} to be within range ${floor} - ${ceiling}`,
-          pass: false,
-        };
-      }
-    },
-  });
+const mockAdd = Mock.fn(add);
 
-
-  console.log(expect(100).toBeWithinRange(90, 110));
-  console.log(expect(101).not.toBeWithinRange(0, 100));
+mockAdd(4,4)
+mockAdd(4,4)
+console.log(expect(mockAdd).toHaveBeenCalled())
+console.log(expect(mockAdd).toHaveBeenCalledTimes(2))
+console.log(expect(mockAdd).toHaveBeenCalledWith(4))
+console.log(expect(mockAdd).toHaveBeenLastCalledWith(4,4))
+console.log(expect(mockAdd).toHaveBeenNthCalledWith(2,4,4))
+console.log(expect(mockAdd).toHaveReturnedTimes(2))
+console.log(expect(mockAdd).toHaveLastReturned(8))
+console.log(expect(mockAdd).toHaveNthReturnWith(2,8))
