@@ -1,5 +1,5 @@
-const {MOCK} = require('./Globals.js');
-
+import keys from './globals'
+const MOCK = keys.MOCK;
 const Mock = {
     fn(func){
         let spy = new Proxy(func,{

@@ -1,3 +1,4 @@
+
 function mapObjToString(obj,result = {},parentKey=undefined){
     for(let key in obj) {
         if(obj.hasOwnProperty(key)) {
@@ -16,8 +17,6 @@ function mapObjToString(obj,result = {},parentKey=undefined){
     return result
 }
 
-
-
 function expect (received){
     return new Expect(received);
 }
@@ -30,7 +29,6 @@ expect = new Proxy(expect,{
        return Expect[prop];
     }
 });
-
 
 class Expect {
     constructor(received) {
@@ -129,7 +127,7 @@ class Expect {
         return (this.received <= expected)? this.pass() : this.fail();
     };
     toBeInstanceOf(expected){
-        return (this.received instanceof expected)? this.pass() : this.fail();
+        return (this.received instanceof expected)? this.pass(expected) : this.fail(expected);
     };
     toBeNull() {
         return (this.received == null)? this.pass() : this.fail();
@@ -142,7 +140,7 @@ class Expect {
     };
     toBeNaN () {
         if (
-            this.toBeFalsey()
+            this.toBeFalsy()
             && this.received !== undefined
             && this.received !== null
             && typeof this.received !== 'boolean'
@@ -206,11 +204,9 @@ class Expect {
         for(let key in matcher){
            if(!Object.keys(this).includes(key)){
                this[key] = matcher[key];
-               console.log(this);
            }
         }
     }
 }
 
-
-module.exports = expect;
+export default expect;
