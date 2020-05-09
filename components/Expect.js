@@ -27,6 +27,9 @@ expect = new Proxy(expect,{
     },
     get(target,prop){
        return Expect[prop];
+    },
+    set(){
+
     }
 });
 
@@ -160,23 +163,34 @@ class Expect {
     }
     toHaveBeenCalledWith(...args){
         let calls = this.received.mock.calls;
-        let callsMapped = calls.map(call=>expect(call).toMatchArray(args)).includes(true);
-        return callsMapped ? this.pass() : this.fail();
+        let passes = false;
+        if(args.length === 1){
+            calls.forEach(call=>{ 
+                call.forEach(arg=>{
+                    if(expect(arg).toBe(args[0])){passes = true}
+                })
+            })
+        }else{
+            calls.forEach(call=>{ 
+                if(expect(call).toMatchArray(args)){passes = true}
+            })
+        }
+        return passes ? this.pass() : this.fail();
     }
     toHaveBeenLastCalledWith(...args){
         return expect(this.received.mock.calls[this.received.mock.calls.length-1]).toMatchArray(args);
     }
-    toHaveBeenNthCalledWith(nth,args){
-        return expect(this.received.mock.calls[nth]).toMatchArray(args) ? this.pass() : this.fail();
+    toHaveBeenNthCalledWith(nth,...args){
+        return expect(this.received.mock.calls[nth-1]).toMatchArray(args) ? this.pass() : this.fail();
     }
     toHaveReturnedTimes(expected){
         return this.received.mock.results.length === expected ? this.pass(expected) : this.fail(expected);
     }
-    toHaveLastReturned(){
-        return this.received.mock.results.length > 0 ? this.pass() : this.fail();
+    toHaveLastReturned(expected){
+        return expect(this.received.mock.calls[this.received.mock.calls.length-1]).toBe(expected) ? this.pass(expected) : this.fail(expected);
     }
-    toHaveNthReturnWith(){
-        return expect(this.received.mock.calls[this.received.mock.calls.length-1]).toMatchArray(args);
+    toHaveNthReturnWith(nth,args){
+        return expect(this.received.mock.results[nth-1].value).toBe(args);
     }
     toContain(){
 

@@ -1,5 +1,6 @@
-import keys from './globals'
+import keys from './globals.js'
 const MOCK = keys.MOCK;
+
 const Mock = {
     fn(func){
         let spy = new Proxy(func,{
@@ -38,4 +39,4 @@ const Mock = {
     }
 };
 
-module.exports = Mock;
+export default Mock
