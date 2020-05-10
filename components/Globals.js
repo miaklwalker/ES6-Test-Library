@@ -1,7 +1,3 @@
-let keys = {
-    MOCK:Symbol('Mock'),
-    ___test___:[],
-    _TESTNAME:''
-};
-
-export default keys;
+export const MOCK = Symbol('Mock');
+const ___tests___  = {};
+export default ___tests___;
