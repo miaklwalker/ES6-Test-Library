@@ -137,27 +137,16 @@ class Expect {
         return (this.received instanceof expected)? this.pass(expected) : this.fail(expected);
     };
     toBeNull() {
-        return (this.received == null)? this.pass(expected) : this.fail(expected);
+        return (this.received == null)? this.pass() : this.fail();
     };
     toBeTruthy() {
-        return !(!this.received)? this.pass(expected) : this.fail(expected);
+        return !(!this.received)? this.pass() : this.fail();
     };
     toBeUndefined() {
         return (this.received == undefined)? this.pass('expected to not be undefined') : this.fail('expected undefined');
     };
     toBeNaN () {
-        if (
-            this.toBeFalsy()
-            && this.received !== undefined
-            && this.received !== null
-            && typeof this.received !== 'boolean'
-            && typeof this.received !== 'string'
-            && this.received !== 0
-            && this.received !== false
-        ) {
-            return this.pass('Expected to not be NaN')
-        }
-        return this.fail('Expected to be NaN');
+        return isNaN(this.received) ? this.pass('expected not to be NaN') : this.fail('Expected NaN');
     };
     toHaveBeenCalled(){
         return this.received.mock.calls.length > 0 ? this.pass() : this.fail() ;
