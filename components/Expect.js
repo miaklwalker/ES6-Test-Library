@@ -1,15 +1,27 @@
+import{results} from './Globals.js'
+
 
 function mapObjToString(obj,result = {},parentKey=undefined){
+
     for(let key in obj) {
+
         if(obj.hasOwnProperty(key)) {
+
             if (typeof obj[key] === 'object') {
+
                 result[key] = true;
                 mapObjToString(obj[key], result, key);
+
             } else {
+
                 if(parentKey !== undefined ) {
+
                     result[`${parentKey}.${key}`] = obj[key];
+
                 }else{
+
                     result[`${key}`] = obj[key];
+                    
                 }
             }
         }
@@ -42,12 +54,26 @@ class Expect {
         this.received = received;
         this.isObject = typeof this.received === 'object';
         this._not = false;
+        this.result = {
+            message:'',
+            pass:null,
+        }
     }
-    pass(expected){
-        return !this._not ? true : {expected,received:this.received};
+    pass(expected,received = this.received){
+        this.result = {
+            message :  !this._not ? 'Passed' : {expected,received} ,
+            passed  :  !this._not ? true : false 
+        }
+        results.push(this.result)
+        return this;
     }
-    fail(expected){
-        return this._not ? true : {expected,received:this.received};
+    fail(expected,received = this.received){
+        this.result = {
+            message :this._not ? 'Passed' : {expected,received},
+            passed  :this._not ? true : false
+        }
+        results.push(this.result)
+        return this;
     }
     toEqual(expected){
         if(this.isObject){
@@ -63,17 +89,17 @@ class Expect {
                 return this.pass(expected)
             }
         }else{
-            return Object.is(this.received,expected);
+            return Object.is(this.received,expected) ? this.pass(expected) : this.fail(expected);
         }
     };
     toBe(expected){
         return  Object.is(expected, this.received) ? this.pass(expected) : this.fail(expected);
     };
     toHaveReturned(expected){
-        if(expect(this.received()).toBe(expected)){
-            return this.pass(expected);
+        if(Object.is(expected,this.received())){
+            return this.pass(expected,this.received());
         }
-        return this.fail(expected);
+        return this.fail(expected,this.received());
     };
     toMatchArray(expected){
         if (this.received.length === expected.length) {
@@ -85,7 +111,7 @@ class Expect {
             }
 
         }
-        return false;
+        return this.fail(expected);
     };
     anything(){
         return this.received !== undefined && this.received !== null ? this.pass('to Be Null') : this.fail('To Not be null or undefined');
@@ -118,8 +144,8 @@ class Expect {
     toBeFalsy(){
         return this.received ? this.fail('Expected a falsey value') : this.pass(' ');
     };
-    toBeDefined(expected){
-        return this.toBeUndefined() !== true ? this.pass(expected) : this.fail(expected);
+    toBeDefined(){
+        return this.received !== undefined ? this.pass() : this.fail();
     }
     toBeGreaterThan(expected){
         return (this.received > expected) ? this.pass(expected) : this.fail(expected);
@@ -137,7 +163,7 @@ class Expect {
         return (this.received instanceof expected)? this.pass(expected) : this.fail(expected);
     };
     toBeNull() {
-        return (this.received == null)? this.pass() : this.fail();
+        return (this.received === null)? this.pass('null',`${this.received}`) : this.fail('null',`${this.received}`);
     };
     toBeTruthy() {
         return !(!this.received)? this.pass() : this.fail();
@@ -185,14 +211,31 @@ class Expect {
     toHaveNthReturnWith(nth,args){
         return expect(this.received.mock.results[nth-1].value).toBe(args);
     }
-    toContain(){
-
+    toContain(expected){
+        return this.received.includes(expected) ? this.pass(expected) : this.fail(expected);
     }
-    toContainEqual(){
-
-    }
-    tomatch(){
-
+    toContainEqual(expected){
+        let passes = true
+        let message;
+        function checkObject(received){
+            for(let key in received){
+                if(received[key] === Object){
+                    return checkObject(received[key])
+                }
+                if(expected[key] === undefined){
+                    passes = false;
+                    message = `Object with ${key}, When expected has no such key`;
+                }
+                if(expected[key]!== received[key]){
+                    passes = false;
+                    message = `${key}:${received[key]} does not match expected ${JSON.stringify(expected)}`;
+                }
+            }
+        }
+        if(this.received instanceof Object && expected instanceof Object){
+            checkObject(this.received)
+            return passes ? this.pass(message) : this.fail(message)
+        }
     }
     toMatchObject(){
 
