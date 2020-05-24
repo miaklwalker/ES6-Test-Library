@@ -76,7 +76,7 @@ expect('hello world').not.toBeUndefined(),
 expect(null).not.toBeNaN(),
 expect(['lime','coconut','orange']).not.toContain('banana'),
 expect(myBeverages()).not.toContainEqual({apple:0})
-)
+);
 
 console.log(results);
 
