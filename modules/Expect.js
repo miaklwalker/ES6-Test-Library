@@ -1,42 +1,5 @@
-import {results} from "../components/Globals.js";
-
-function mapObjToString(obj,result = {},parentKey=undefined){
-    for(let key in obj) {
-        if(obj.hasOwnProperty(key)) {
-            if (typeof obj[key] === 'object') {
-                result[key] = true;
-                mapObjToString(obj[key], result, key);
-            } else {
-                if(parentKey !== undefined ) {
-                    result[`${parentKey}.${key}`] = obj[key];
-                }else{
-                    result[`${key}`] = obj[key];
-                }
-            }
-        }
-    }
-    return result
-}
-
-function expect (received){
-    return new Expect(received);
-}
-
-expect = new Proxy(expect,{
-    apply(target,thisArg,args){
-        return target.apply(thisArg,args);
-    },
-    get(target,prop){
-        if(prop === 'extend'){
-            console.log('ran');
-            return Expect.extend
-        }
-        return Expect[prop];
-    },
-    set(){
-
-    }
-});
+import mapObjToString from "./mapObjectToString.js";
+import {tests} from "./Globals.js";
 
 class Expect {
     constructor(received) {
@@ -50,18 +13,18 @@ class Expect {
     }
     pass(expected,received = this.received){
         this.result = {
-            message :  !this._not ? 'Passed' : {expected,received} ,
-            passed  :  !this._not ? true : false
-        }
-        results.push(this.result)
+            message :  !this._not ? 'Passed' : {expected, received} ,
+            passed  :  !this._not
+        };
+        tests.push(this.result);
         return this;
     }
     fail(expected,received = this.received){
         this.result = {
-            message :this._not ? 'Passed' : {expected,received},
-            passed  :this._not ? true : false
-        }
-        results.push(this.result)
+            message : this._not ? 'Passed' : {expected, received},
+            passed  : this._not
+        };
+        tests.push(this.result);
         return this;
     }
     toEqual(expected){
@@ -128,7 +91,9 @@ class Expect {
         return Object.keys(mapObjToString(this.received)).includes(expected) ? this.pass(expected) : this.fail(expected);
     };
     toHavePropertyWithValue(expected, value) {
-        return (this.toHaveProperty(expected) && mapObjToString(this.received)[expected] === value) ?this.pass(expected) : this.fail(expected);
+        let hasProperty = this.toHaveProperty(expected).result.passed;
+        let hasValue = mapObjToString(this.received)[expected] === value;
+        return ( hasProperty && hasValue ) ? this.pass(expected) : this.fail(expected);
     };
     toBeFalsy(){
         return this.received ? this.fail('Expected a falsey value') : this.pass(' ');
@@ -158,7 +123,7 @@ class Expect {
         return !(!this.received)? this.pass() : this.fail();
     };
     toBeUndefined() {
-        return (this.received == undefined)? this.pass('expected to not be undefined') : this.fail('expected undefined');
+        return (this.received === undefined)? this.pass('expected to not be undefined') : this.fail('expected undefined');
     };
     toBeNaN () {
         return isNaN(this.received) ? this.pass('expected not to be NaN') : this.fail('Expected NaN');
@@ -195,54 +160,72 @@ class Expect {
         return this.received.mock.results.length === expected ? this.pass(expected) : this.fail(expected);
     }
     toHaveLastReturned(expected){
-        return expect(this.received.mock.calls[this.received.mock.calls.length-1]).toBe(expected) ? this.pass(expected) : this.fail(expected);
+        return expect(this.received.mock.results[this.received.mock.calls.length-1].value).toBe(expected) ? this.pass(expected) : this.fail(expected);
     }
     toHaveNthReturnWith(nth,args){
         return expect(this.received.mock.results[nth-1].value).toBe(args);
     }
     toContain(expected){
-        return this.received.includes(expected) ? this.pass(expected) : this.fail(expected);
+        if(Array.isArray(expected)){
+            return this.received.includes(expected) ? this.pass(expected) : this.fail(expected);
+        }else if(typeof expected === 'set'){
+            console.log('set');
+        }
     }
     toContainEqual(expected){
-        let passes = true
+        let passes = true;
         let message;
         function checkObject(received){
             for(let key in received){
-                if(received[key] === Object){
-                    return checkObject(received[key])
-                }
-                if(expected[key] === undefined){
-                    passes = false;
-                    message = `Object with ${key}, When expected has no such key`;
-                }
-                if(expected[key]!== received[key]){
-                    passes = false;
-                    message = `${key}:${received[key]} does not match expected ${JSON.stringify(expected)}`;
+                if(received.hasOwnProperty(key)) {
+                    if (received[key] === Object) {
+                        return checkObject(received[key])
+                    }
+                    if (expected[key] === undefined) {
+                        passes = false;
+                        message = `Object with ${key}, When expected has no such key`;
+                    }
+                    if (expected[key] !== received[key]) {
+                        passes = false;
+                        message = `${key}:${received[key]} does not match expected ${JSON.stringify(expected)}`;
+                    }
                 }
             }
         }
         if(this.received instanceof Object && expected instanceof Object){
-            checkObject(this.received)
+            checkObject(this.received);
             return passes ? this.pass(message) : this.fail(message)
         }
     }
-    toMatchObject(){
-
-    }
-    toStrictlyEqual(){
-
-    }
-    toThrow(){
-
-    }
-    toBeCloseTo(expected,numDigits){
+    toBeCloseTo(expected,numDigits=1){
         const precise = ( x ) => Number.parseFloat(x).toPrecision(numDigits);
         return precise(this.received) === precise(expected) ? this.pass(expected):this.fail(expected);
     }
-    static extend = (matcher)=>{
+    static extend (matcher){
         for(let key in matcher){
             Expect.prototype[key] = matcher[key];
         }
 
     }
+};
+
+function expect (received){
+    return new Expect(received);
 }
+
+expect = new Proxy(expect,{
+    apply(target,thisArg,args){
+        return target.apply(thisArg,args);
+    },
+    get(target,prop){
+        if(prop === 'extend'){
+            return Expect.extend
+        }
+        return Expect[prop];
+    },
+    set(){
+
+    }
+});
+
+export default expect;
