@@ -1,0 +1,7 @@
+{
+  "tests": [
+    "../__tests__/expect.spec.js",
+    "../__tests__/mock.spec.js",
+    "../__tests__/Jest.spec.js"
+  ]
+}

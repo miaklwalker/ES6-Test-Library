@@ -1,6 +1,13 @@
 import mapObjToString from "./mapObjectToString.js";
 import {tests} from "./Globals.js";
 
+/**
+ * @class Expect
+ * @property received - The value received ;
+ * @property isObject - When expect is created it checks if received is a object;
+ * @property _not - A private property that is only directly set with .not it negates any matchers and makes them return true when they fail;
+ * @property result - A object with two properties Message and Pass property;
+ */
 class Expect {
     constructor(received) {
         this.received = received;
@@ -27,6 +34,46 @@ class Expect {
         tests.push(this.result);
         return this;
     }
+    /**
+     *
+     * @description Matches anything but null and undefined;
+     */
+    anything(){
+        return this.received !== undefined && this.received !== null ? this.pass('to Be Null') : this.fail('To Not be null or undefined');
+    };
+    /**
+     * @description Matches anything that was created with the given constructor;
+     * @param expected
+     * @returns {Expect}
+     */
+    any(expected){
+        return typeof this.received === typeof expected() ? this.pass(expected) : this.fail(expected);
+    };
+    /**
+     *@description Matches a received array which contains all of the elements in the expected array.
+     */
+    arrayContaining(expected){
+        if(Array.isArray(expected)){
+            return expected.map(member=>{
+                return this.received.includes(member)
+            }).includes(false) ? this.fail() : this.pass();
+        }else{
+            return this.received.includes(expected) ? this.fail(expected) : this.pass(expected);
+        }
+    };
+    /**
+     * @description Not negates the current matchers and returns its opposite;
+     */
+    get not(){
+        this._not = true;
+        return this
+    };
+    /**
+     * @description Compares primative values or checks refrenctial id , calls object.is under the hood;
+     */
+    toBe(expected){
+        return  Object.is(expected, this.received) ? this.pass(expected) : this.fail(expected);
+    };
     toEqual(expected){
         if(this.isObject){
             let e = mapObjToString(expected);
@@ -43,9 +90,6 @@ class Expect {
         }else{
             return Object.is(this.received,expected) ? this.pass(expected) : this.fail(expected);
         }
-    };
-    toBe(expected){
-        return  Object.is(expected, this.received) ? this.pass(expected) : this.fail(expected);
     };
     toHaveReturned(expected){
         if(Object.is(expected,this.received())){
@@ -64,25 +108,6 @@ class Expect {
 
         }
         return this.fail(expected);
-    };
-    anything(){
-        return this.received !== undefined && this.received !== null ? this.pass('to Be Null') : this.fail('To Not be null or undefined');
-    };
-    arrayContaining(expected){
-        if(Array.isArray(expected)){
-            return expected.map(member=>{
-                return this.received.includes(member)
-            }).includes(false) ? this.fail() : this.pass();
-        }else{
-            return this.received.includes(expected) ? this.fail(expected) : this.pass(expected);
-        }
-    };
-    any(expected){
-        return typeof this.received === typeof expected() ? this.pass(expected) : this.fail(expected);
-    };
-    get not(){
-        this._not = true;
-        return this
     };
     toHaveLength(expected){
         return this.received.length === expected ? this.pass(expected): this.fail(`To have length ${expected}`);
@@ -207,8 +232,15 @@ class Expect {
         }
 
     }
-};
+}
 
+/**
+ *
+ * @param received
+ * @returns {Expect}
+ * @description The expect function used to test a value, Passing it a value will return matchers.
+ * You can use these matchers to test function and verify results
+ */
 function expect (received){
     return new Expect(received);
 }
